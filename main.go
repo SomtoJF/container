@@ -10,12 +10,12 @@ import (
 	"syscall"
 )
 
-// docker run containerID [...args]
-// go run main.go run
-
 func main() {
-	switch os.Args[1] {
+	if len(os.Args) < 2 {
+		panic("no command provided")
+	}
 
+	switch os.Args[1] {
 	case "run":
 		run()
 	case "child":
@@ -26,9 +26,7 @@ func main() {
 }
 
 func run() {
-	fmt.Printf("Running run %v\n", os.Args[2:])
-	// args := os.Args[3:]
-
+	fmt.Printf("Running %v\n", os.Args[2:])
 	cmd := exec.Command("/proc/self/exe", append([]string{"child"}, os.Args[2:]...)...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -36,12 +34,14 @@ func run() {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS,
 	}
-
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Error running child: %v\n", err)
+	}
 }
 
 func child() {
-	fmt.Printf("Running child %v\n", os.Args[2:])
+	fmt.Println("This is the child function")
+	fmt.Printf("Running %v\n", os.Args[2:])
 
 	syscall.Sethostname([]byte("container"))
 
@@ -50,11 +50,7 @@ func child() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		fmt.Printf("Error running command: %v\n", err)
+	}
 }
-
-// func must(err error) {
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
