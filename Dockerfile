@@ -17,15 +17,15 @@ COPY *.go ./
 RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
 # Start a new stage from scratch
-FROM alpine:latest  
+FROM ubuntu:latest  
 
-# Install ca-certificates for HTTPS
-RUN apk --no-cache add ca-certificates
+# Install ca-certificates and bash for HTTPS and shell access
+RUN apt-get update && apt-get install -y ca-certificates bash
 
 WORKDIR /root/
 
 # Copy the pre-built binary file from the previous stage
 COPY --from=builder /app/main .
 
-# Command to run the executable
-ENTRYPOINT ["./main"]
+# Set bash as the default shell when the container starts
+ENTRYPOINT ["/bin/bash"]
